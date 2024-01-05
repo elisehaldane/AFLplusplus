@@ -398,6 +398,8 @@ help:
 	@echo NO_UTF - do not use UTF-8 for line rendering in status screen (fallback to G1 box drawing, of vanilla AFL)
 	@echo NO_NYX - disable building nyx mode dependencies
 	@echo "NO_CORESIGHT - disable building coresight (arm64 only)"
+	@echo NO_FRIDA - disable building FRIDA mode
+	@echo NO_QEMU - disable building QEMU mode
 	@echo NO_UNICORN_ARM64 - disable building unicorn on arm64
 	@echo "WAFL_MODE - enable for WASM fuzzing with https://github.com/fgsect/WAFL"
 	@echo AFL_NO_X86 - if compiling on non-intel/amd platforms
@@ -647,9 +649,11 @@ endif
 	-$(MAKE) -C utils/socket_fuzzing
 	-$(MAKE) -C utils/argv_fuzzing
 	# -$(MAKE) -C utils/plot_ui
+ifndef NO_FRIDA
 	-$(MAKE) -C frida_mode
+endif
 ifneq "$(SYS)" "Darwin"
-  ifeq "$(ARCH)" "aarch64"
+  ifeq ($(filter $(ARCH), "aarch64" "arm64"),)
     ifndef NO_CORESIGHT
 	-$(MAKE) -C coresight_mode
     endif
@@ -659,8 +663,10 @@ ifneq "$(SYS)" "Darwin"
 	-cd nyx_mode && ./build_nyx_support.sh
     endif
   endif
+  ifndef NO_QEMU
 	-cd qemu_mode && sh ./build_qemu_support.sh
-  ifeq "$(ARCH)" "aarch64"
+  endif
+  ifeq ($(filter $(ARCH), "aarch64" "arm64"),)
     ifndef NO_UNICORN_ARM64
 	-cd unicorn_mode && unset CFLAGS && sh ./build_unicorn_support.sh
     endif
@@ -681,7 +687,7 @@ endif
 	# -$(MAKE) -C utils/plot_ui
 	-$(MAKE) -C frida_mode
 ifneq "$(SYS)" "Darwin"
-ifeq "$(ARCH)" "aarch64"
+ifeq ($(filter $(ARCH), "aarch64" "arm64"),)
   ifndef NO_CORESIGHT
 	-$(MAKE) -C coresight_mode
   endif
@@ -692,7 +698,7 @@ ifndef NO_NYX
 endif
 endif
 	-cd qemu_mode && sh ./build_qemu_support.sh
-  ifeq "$(ARCH)" "aarch64"
+  ifeq ($(filter $(ARCH), "aarch64" "arm64"),)
     ifndef NO_UNICORN_ARM64
 	-cd unicorn_mode && unset CFLAGS && sh ./build_unicorn_support.sh
     endif
@@ -705,7 +711,7 @@ endif
 	@echo Build Summary:
 	@test -e afl-fuzz && echo "[+] afl-fuzz and supporting tools successfully built" || echo "[-] afl-fuzz could not be built, please set CC to a working compiler"
 ifneq "$(SYS)" "Darwin"
-ifeq "$(ARCH)" "aarch64"
+ifeq ($(filter $(ARCH), "aarch64" "arm64"),)
   ifndef NO_CORESIGHT
 	@test -e afl-cs-proxy && echo "[+] coresight_mode successfully built" || echo "[-] coresight_mode could not be built, it is optional and experimental, see coresight_mode/README.md for what is needed"
   endif
@@ -716,7 +722,7 @@ ifndef NO_NYX
 endif
 endif
 	@test -e afl-qemu-trace && echo "[+] qemu_mode successfully built" || echo "[-] qemu_mode could not be built, see docs/INSTALL.md for what is needed"
-  ifeq "$(ARCH)" "aarch64"
+  ifeq ($(filter $(ARCH), "aarch64" "arm64"),)
     ifndef NO_UNICORN_ARM64
 	@test -e unicorn_mode/unicornafl/build_python/libunicornafl.so && echo "[+] unicorn_mode successfully built" || echo "[-] unicorn_mode could not be built, it is optional, see unicorn_mode/README.md for what is needed"
     endif
