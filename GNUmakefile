@@ -169,6 +169,11 @@ override CFLAGS += -g -Wno-pointer-sign -Wno-variadic-macros -Wall -Wextra -Wno-
 # -fstack-protector
 
 ifeq "$(SYS)" "FreeBSD"
+  # Under FreeBSD, uname -m returns "arm64" on aarch64.
+  # However, uname -p returns "aarch64".
+  ifeq "$(ARCH)" "arm64"
+    ARCH = $(shell uname -p)
+  endif
   override CFLAGS  += -I /usr/local/include/
   override LDFLAGS += -L /usr/local/lib/
 endif
